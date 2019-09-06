@@ -7,8 +7,6 @@ var mapOptions = {
   // maxZoom: 1
 }
 
-
-
 // Creating a map object
 var map = new L.map('map', mapOptions);
 
@@ -50,9 +48,6 @@ var fieldName = ['NDVI_JFM', 'NDWI_JFM', 'Soil_Phosp', 'Soil_Alumi', 'Soil_Potas
 
 var minMax = [[-0.02, 1], [-0.05, 1], [600, 2300], [700, 970], [130, 280], [45, 150], [0, 70], [0, 3000], [1, 8], [1, 20], [1055, 1570]];
 
-// console.log(sliders)
-// console.log(map)
-
 for (var i = 0; i < sliders.length; i++) {
 
   noUiSlider.create(sliders[i], {
@@ -65,16 +60,7 @@ for (var i = 0; i < sliders.length; i++) {
       'min': minMax[i][0],
       'max': minMax[i][1]
     },
-    tooltips: true,
-    // format: {
-    //   to: function (value) {
-    //     // console.log(value);
-    //     return value.toFixed(0) + '%';
-    //   },
-    //   from: function (value) {
-    //     return value.replace('%', '');
-    //   }
-    // }
+    tooltips: true
   });
 
   var activeFilters = [];
@@ -111,7 +97,6 @@ function addValues() {
     for (var j = 0; j < sliderData[0].length; j++) {
       if (l['feature']['properties'][sliderData[0][j]]) {
         subCountyValue = +(l['feature']['properties'][sliderData[0][j]]);
-        // console.log(+((sliderData[1][j][0])));
         if (subCountyValue < +((sliderData[1][j][0])) || subCountyValue > +((sliderData[1][j][1]))) {
           filtered.push(l['feature']['properties'].id);
         }
@@ -124,8 +109,6 @@ function addValues() {
   filteredIDs = filtered.filter(function (item, pos) {
     return filtered.indexOf(item) === pos;
   });
-
-  console.log(filteredIDs)
 
   for (key in layer['_layers']) {
     var l = layer['_layers'][key];
