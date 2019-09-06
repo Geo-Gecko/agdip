@@ -26,10 +26,15 @@ scale.addTo(map); // Adding scale control to the map
 function style(feature) {
   return {
     fillColor: '#826600',
+    color: "#d1a917",
     weight: 0,
     opacity: 1,
     fillOpacity: 0.7
   };
+}
+
+function onEachFeature(feature, layer) {
+  layer.bindPopup('<h5 style=" margin:0;">Grid-ID: '+feature.properties.id+'</h5><br><p>Properties</p><br><p style="color:#000; margin:0;">NDVI: '+parseFloat(feature.properties.NDVI_JFM).toFixed(2)+'</p><br><p style="color:#000; margin:0;">NDWI: '+parseFloat(feature.properties.NDWI_JFM).toFixed(2)+'</p><br><p style="color:#000; margin:0;">Phosphorus Content: '+parseFloat(feature.properties.Soil_Phosp).toFixed(2)+'</p><br><p style="color:#000; margin:0;">Aluminium Content: '+parseFloat(feature.properties.Soil_Alumi).toFixed(2)+'</p><br><p style="color:#000; margin:0;">Potassium Content: '+parseFloat(feature.properties.Soil_Potas).toFixed(2)+'</p><br><p style="color:#000; margin:0;">Boron: '+parseFloat(feature.properties.Soil_Boron).toFixed(2)+'</p><br><p style="color:#000; margin:0;">Rainfall: '+parseFloat(feature.properties.Rainfall).toFixed(2)+'</p><br><p style="color:#000; margin:0;">PPP-sum: '+parseFloat(feature.properties.ppp_sum).toFixed(2)+'</p><br><p style="color:#000; margin:0;">Land Cover: '+parseFloat(feature.properties.Land_Cover).toFixed(0)+'</p><br><p style="color:#000; margin:0;">Slope: '+parseFloat(feature.properties.Slope).toFixed(2)+'</p><br><p style="color:#000; margin:0;">Elevation: '+parseFloat(feature.properties.Elevation).toFixed(2)+'</p>');
 }
 
 var layer;
@@ -37,6 +42,7 @@ var layer;
 $.getJSON("data/Kiboga.geojson", function (data) {
   // L.geoJson function is used to parse geojson file and load on to map
   layer = L.geoJson(data, {
+    onEachFeature: onEachFeature,
     style: style
   }).addTo(map);
   map.fitBounds(layer.getBounds())
@@ -114,7 +120,7 @@ function addValues() {
     var l = layer['_layers'][key];
     l.setStyle({
       opacity: 1,
-      fillOpacity: 1
+      fillOpacity: 0.7
     })
     for (var j = 0; j < filteredIDs.length; j++) {
       if (l['feature']['properties'].id === filteredIDs[j]) {
