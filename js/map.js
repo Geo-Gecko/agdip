@@ -1,10 +1,6 @@
-
 // Creating map options
 var mapOptions = {
-  center: [0.9204, 31.7708],
-  zoom: 10.5,
-  // minZoom: 5,
-  // maxZoom: 1
+  center: [1.66, 32.55],
 }
 
 // Creating a map object
@@ -45,10 +41,7 @@ Papa.parse('./js/uganda_grid_5by5km_noWater_withDistrict.csv', {
   download: true,
   dynamicTyping: true,
   complete: function (results) {
-    console.log(results);
     data = results.data;
-
-    console.log(data)
   }
 });
 
@@ -57,15 +50,66 @@ datalayer = L.geoJson(grid, {
   style: style,
   onEachFeature: function (feature, featureLayer) {
     featureLayer.bindPopup(feature.properties.District);
+
+    featureLayer.on({
+      mouseover: onMouseOver,
+      mouseout: onMouseOut,
+    })
   }
 }).addTo(map)
 
+function onMouseOver(e) {
+  data.forEach(element => {
+    if(e.target.feature.properties.id == element.id) {
+      info.update(element);
+    }
+  });
+}
+
+function onMouseOut(e) {
+  info.update();
+}
+
+
+
 map.fitBounds(datalayer.getBounds());
+
+var info = L.control();
+
+info.onAdd = function (map) {
+    this._div = L.DomUtil.create('div', 'info'); 
+    this.update();
+    return this._div;
+};
+
+info.update = function (props) {
+    this._div.innerHTML = '<h4>Details</h4>' +  (props ?
+        '<b>Grid ID #' + props.id + '</b><br />'+ 
+        '<h3>Crop Data</h3><br />' 
+        + '<span>Average Health</span><br />' + props.NDVI_JFM + '<br />'
+        + '<span>Average Soil Moisture</span><br />' + props.NDWI_JFM + '<br />'+ 
+        '<h3>Soil Data</h3><br /><sup>Units: grams per Kilo</sup><br />'
+        + '<span>Average Aluminium Content</span><br />' + props.Soil_Alumi + '<br />'
+        + '<span>Average Boron Content</span><br />' + props.Soil_Boron + '<br />'
+        + '<span>Average Copper Content</span><br />' + props.Soil_Coppe + '<br />'
+        + '<span>Average Iron Content</span><br />' + props.Soil_Iron + '<br />'
+        + '<span>Average Magnesium Content</span><br />' + props.Soil_Magne + '<br />'
+        + '<span>Average Phosphorus Content</span><br />' + props.Soil_Phosp + '<br />'
+        + '<span>Average Potassium Content</span><br />' + props.Soil_Potas + '<br />'+ 
+        '<h3>Land Factors</h3><br />' 
+        + '<span>Average Elevation</span><br />' + props.DEM_mean + '<br />'
+        + '<span>Average Slope</span><br />' + props.Slope_mean + '<br />'
+        + '<span>Landcover Type</span><br />' + props.LandCover_mean + '<br />'
+        : 'Hover over a grid cell');
+};
+
+info.addTo(map);
 
 
 d3.selectAll(".slider").append("div").attr("class", "sliders");
 var sliders = document.getElementsByClassName('sliders');
-var fieldName = ['NDVI_JFM', 'NDWI_JFM', 'Soil_Phosp', 'Soil_Alumi', 'Soil_Potas', 'Soil_Boron', 'Rainfall', 'ppp_sum', 'LandCover_mean', 'Slope_mean', 'DEM_mean'];
+// var fieldName = ['NDVI_JFM', 'NDWI_JFM', 'Soil_Phosp', 'Soil_Alumi', 'Soil_Potas', 'Soil_Boron', 'Rainfall', 'ppp_sum', 'LandCover_mean', 'Slope_mean', 'DEM_mean'];
+var fieldName = ['NDVI_JFM', 'NDWI_JFM', 'Soil_Phosp', 'Soil_Alumi', 'Soil_Potas', 'Soil_Boron', 'Rainfall', 'LandCover_mean', 'Slope_mean', 'DEM_mean'];
 // var fieldName = ['DEM_mean', 'Slope_mean', 'LandCover_mean'];
 
 var minMax = [
@@ -75,10 +119,10 @@ var minMax = [
   [540, 1820],
   [115, 1290],
   [40, 180],
-  [0, 3000],
-  [0, 3000],
+  [20, 120],
+  // [0, 3000],
   [1, 8],
-  [60, 90],
+  [88, 90],
   [620, 4000]
 ];
 
@@ -124,9 +168,6 @@ function addValues() {
   var filtered = [];
   var filteredIDs = [];
   var value;
-
-  console.log(sliderData)
-
 
   data.forEach(element => {
     for (var j = 0; j < sliderData[0].length; j++) {
