@@ -34,25 +34,53 @@ function style(feature) {
 }
 
 function onEachFeature(feature, layer) {
-  layer.bindPopup('<h5 style=" margin:0;">Grid-ID: '+feature.properties.id+'</h5><br><p>Properties</p><br><p style="color:#000; margin:0;">NDVI: '+parseFloat(feature.properties.NDVI_JFM).toFixed(2)+'</p><br><p style="color:#000; margin:0;">NDWI: '+parseFloat(feature.properties.NDWI_JFM).toFixed(2)+'</p><br><p style="color:#000; margin:0;">Phosphorus Content: '+parseFloat(feature.properties.Soil_Phosp).toFixed(2)+'</p><br><p style="color:#000; margin:0;">Aluminium Content: '+parseFloat(feature.properties.Soil_Alumi).toFixed(2)+'</p><br><p style="color:#000; margin:0;">Potassium Content: '+parseFloat(feature.properties.Soil_Potas).toFixed(2)+'</p><br><p style="color:#000; margin:0;">Boron: '+parseFloat(feature.properties.Soil_Boron).toFixed(2)+'</p><br><p style="color:#000; margin:0;">Rainfall: '+parseFloat(feature.properties.Rainfall).toFixed(2)+'</p><br><p style="color:#000; margin:0;">PPP-sum: '+parseFloat(feature.properties.ppp_sum).toFixed(2)+'</p><br><p style="color:#000; margin:0;">Land Cover: '+parseFloat(feature.properties.Land_Cover).toFixed(0)+'</p><br><p style="color:#000; margin:0;">Slope: '+parseFloat(feature.properties.Slope).toFixed(2)+'</p><br><p style="color:#000; margin:0;">Elevation: '+parseFloat(feature.properties.Elevation).toFixed(2)+'</p>');
+  layer.bindPopup('<h5 style=" margin:0;">Grid-ID: ' + feature.properties.id + '</h5><br><p>Properties</p><br><p style="color:#000; margin:0;">NDVI: ' + parseFloat(feature.properties.NDVI_JFM).toFixed(2) + '</p><br><p style="color:#000; margin:0;">NDWI: ' + parseFloat(feature.properties.NDWI_JFM).toFixed(2) + '</p><br><p style="color:#000; margin:0;">Phosphorus Content: ' + parseFloat(feature.properties.Soil_Phosp).toFixed(2) + '</p><br><p style="color:#000; margin:0;">Aluminium Content: ' + parseFloat(feature.properties.Soil_Alumi).toFixed(2) + '</p><br><p style="color:#000; margin:0;">Potassium Content: ' + parseFloat(feature.properties.Soil_Potas).toFixed(2) + '</p><br><p style="color:#000; margin:0;">Boron: ' + parseFloat(feature.properties.Soil_Boron).toFixed(2) + '</p><br><p style="color:#000; margin:0;">Rainfall: ' + parseFloat(feature.properties.Rainfall).toFixed(2) + '</p><br><p style="color:#000; margin:0;">PPP-sum: ' + parseFloat(feature.properties.ppp_sum).toFixed(2) + '</p><br><p style="color:#000; margin:0;">Land Cover: ' + parseFloat(feature.properties.Land_Cover).toFixed(0) + '</p><br><p style="color:#000; margin:0;">Slope: ' + parseFloat(feature.properties.Slope).toFixed(2) + '</p><br><p style="color:#000; margin:0;">Elevation: ' + parseFloat(feature.properties.Elevation).toFixed(2) + '</p>');
 }
 
-var layer;
-// loading GeoJSON file - Here my html and usa_adm.geojson file resides in same folder
-$.getJSON("data/Kiboga.geojson", function (data) {
-  // L.geoJson function is used to parse geojson file and load on to map
-  layer = L.geoJson(data, {
-    onEachFeature: onEachFeature,
-    style: style
-  }).addTo(map);
-  map.fitBounds(layer.getBounds())
+
+var data;
+
+Papa.parse('./js/uganda_grid_5by5km_noWater_withDistrict.csv', {
+  header: true,
+  download: true,
+  dynamicTyping: true,
+  complete: function (results) {
+    console.log(results);
+    data = results.data;
+
+    console.log(data)
+  }
 });
+
+
+datalayer = L.geoJson(grid, {
+  style: style,
+  onEachFeature: function (feature, featureLayer) {
+    featureLayer.bindPopup(feature.properties.District);
+  }
+}).addTo(map)
+
+map.fitBounds(datalayer.getBounds());
+
 
 d3.selectAll(".slider").append("div").attr("class", "sliders");
 var sliders = document.getElementsByClassName('sliders');
-var fieldName = ['NDVI_JFM', 'NDWI_JFM', 'Soil_Phosp', 'Soil_Alumi', 'Soil_Potas', 'Soil_Boron', 'Rainfall', 'ppp_sum', 'Land_Cover', 'Slope', 'Elevation'];
+var fieldName = ['NDVI_JFM', 'NDWI_JFM', 'Soil_Phosp', 'Soil_Alumi', 'Soil_Potas', 'Soil_Boron', 'Rainfall', 'ppp_sum', 'LandCover_mean', 'Slope_mean', 'DEM_mean'];
+// var fieldName = ['DEM_mean', 'Slope_mean', 'LandCover_mean'];
 
-var minMax = [[-0.02, 1], [-0.05, 1], [600, 2300], [700, 970], [130, 280], [45, 150], [0, 70], [0, 3000], [1, 8], [1, 20], [1055, 1570]];
+var minMax = [
+  [-0.02, 1],
+  [-0.05, 1],
+  [450, 5800],
+  [540, 1820],
+  [115, 1290],
+  [40, 180],
+  [0, 3000],
+  [0, 3000],
+  [1, 8],
+  [60, 90],
+  [620, 4000]
+];
 
 for (var i = 0; i < sliders.length; i++) {
 
@@ -93,31 +121,30 @@ function addValues() {
 
   var sliderData = [fieldName].concat([realRange]);
 
-
   var filtered = [];
   var filteredIDs = [];
-  var subCountyValue;
+  var value;
 
-  for (key in layer['_layers']) {
-    var l = layer['_layers'][key];
+  console.log(sliderData)
+
+
+  data.forEach(element => {
     for (var j = 0; j < sliderData[0].length; j++) {
-      if (l['feature']['properties'][sliderData[0][j]]) {
-        subCountyValue = +(l['feature']['properties'][sliderData[0][j]]);
-        if (subCountyValue < +((sliderData[1][j][0])) || subCountyValue > +((sliderData[1][j][1]))) {
-          filtered.push(l['feature']['properties'].id);
+      if (element[sliderData[0][j]]) {
+        value = +(element[sliderData[0][j]]);
+        if (value < +((sliderData[1][j][0])) || value > +((sliderData[1][j][1]))) {
+          filtered.push(element.id);
         }
       }
-
     }
-
-  }
+  });
 
   filteredIDs = filtered.filter(function (item, pos) {
     return filtered.indexOf(item) === pos;
   });
 
-  for (key in layer['_layers']) {
-    var l = layer['_layers'][key];
+  for (key in datalayer['_layers']) {
+    var l = datalayer['_layers'][key];
     l.setStyle({
       opacity: 1,
       fillOpacity: 0.7
